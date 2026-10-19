@@ -1,6 +1,11 @@
 # The Price of Influence — Interactive Vocabulary & Spaced Repetition System
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FGyanpapi%2Fthe-price-of-influence)
+
 An interactive web application designed to master 333 high-frequency vocabulary words through the teaching novel **"The Price of Influence: 27 Laws of Judgment"**.
+
+**Live GitHub Repository**: [https://github.com/Gyanpapi/the-price-of-influence](https://github.com/Gyanpapi/the-price-of-influence)
+
 
 ## 🌟 Key Features
 
