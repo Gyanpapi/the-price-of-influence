@@ -103,20 +103,28 @@ class Application {
     const drawerList = document.getElementById('drawer-chapters-list');
     if (!drawerList) return;
 
+    const kanjiNums = ["〇", "壱", "弐", "参", "四", "五", "六", "七", "八", "九", "十", 
+                       "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+                       "二十一", "二十二", "二十三", "二十四", "二十五", "二十六", "二十七"];
+
     drawerList.innerHTML = allChapters.map(ch => {
       const isRead = window.srsEngine.isChapterRead(ch.law);
       const score = window.srsEngine.getLawRetentionScore(ch.law, ch.words);
-      const badgeBg = score >= 80 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400';
+      const badgeBorder = score >= 80 ? 'border-emerald-600 text-emerald-800 dark:text-emerald-300' : score >= 50 ? 'border-amber-600 text-amber-800 dark:text-amber-300' : 'border-slate-400 text-muted-foreground';
 
       return `
         <button onclick="window.app.openChapter(${ch.law})" 
-                class="w-full text-left p-3 rounded-xl hover:bg-muted transition-all flex items-center justify-between border border-transparent hover:border-border">
+                class="catalog-card w-full text-left p-3 rounded border border-border hover:border-primary transition-all flex items-center justify-between font-serif">
           <div class="pr-2">
-            <div class="text-[11px] font-bold text-muted-foreground uppercase">Law ${ch.law}</div>
-            <div class="text-sm font-serif font-semibold text-foreground line-clamp-1">${ch.title}</div>
-            <div class="text-[10px] text-muted-foreground">${ch.words.length} words ${isRead ? '• Read' : ''}</div>
+            <div class="text-[10px] font-mono font-bold text-primary">
+              【 第${kanjiNums[ch.law] || ch.law}則 】 LAW ${String(ch.law).padStart(2, '0')}
+            </div>
+            <div class="text-sm font-serif font-bold text-foreground line-clamp-1 mt-0.5">${ch.title}</div>
+            <div class="text-[10px] font-mono text-muted-foreground mt-0.5">${ch.words.length} 語 ${isRead ? '• 読了済' : '• 未読'}</div>
           </div>
-          <span class="w-2.5 h-2.5 rounded-full ${badgeBg} flex-shrink-0" title="${score}% Retention"></span>
+          <span class="text-[10px] font-mono font-bold px-2 py-0.5 border ${badgeBorder} rounded flex-shrink-0">
+            ${score}%
+          </span>
         </button>
       `;
     }).join('');
@@ -177,72 +185,84 @@ class Application {
 
     const currentQuiz = window.quizEngine.currentQuiz;
     const progress = Math.round(((window.quizEngine.currentIndex) / currentQuiz.totalCount) * 100);
+    const kanjiLetters = ["甲", "乙", "丙", "丁"];
 
     container.innerHTML = `
       <div class="max-w-2xl mx-auto space-y-6">
-        <!-- Quiz Header -->
-        <div class="p-6 rounded-3xl bg-card border border-border/70 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
+        <!-- Examination Header Card -->
+        <div class="catalog-card p-5 sm:p-6 rounded border-2 border-border shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-dashed border-border/70">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                ${currentQuiz.title}
-              </span>
-              <div class="text-xs text-muted-foreground mt-0.5">
-                Question ${window.quizEngine.currentIndex + 1} of ${currentQuiz.totalCount}
+              <div class="flex items-center gap-2">
+                <span class="hanko-stamp text-[10px]">筆記試験</span>
+                <span class="text-xs font-mono font-bold tracking-wider text-muted-foreground uppercase">
+                  ${currentQuiz.title}
+                </span>
+              </div>
+              <div class="text-xs font-mono text-muted-foreground mt-1">
+                問 第 ${window.quizEngine.currentIndex + 1} 題 / 全 ${currentQuiz.totalCount} 題
               </div>
             </div>
 
             <!-- CUMULATIVE RETENTION BADGE -->
             ${q.isCumulative ? `
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold animate-pulse">
-                <span>🔄 Cumulative Review (Law ${q.law})</span>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded border border-indigo-500/40 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-xs font-bold font-mono">
+                <span>🔄 【 累計回帰 】 Law ${q.law} 語彙</span>
               </div>
             ` : `
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                <span>📖 Law ${q.law} Target Word</span>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded border border-primary/30 bg-primary/10 text-primary text-xs font-bold font-mono">
+                <span>📖 【 当則課題 】 Law ${q.law} 語彙</span>
               </div>
             `}
           </div>
 
           <!-- Progress Bar -->
-          <div class="w-full bg-muted rounded-full h-2 overflow-hidden">
-            <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-[11px] font-mono text-muted-foreground">
+              <span>進捗率</span>
+              <span>${progress}%</span>
+            </div>
+            <div class="w-full bg-secondary rounded-full h-1.5 overflow-hidden border border-border/50">
+              <div class="bg-primary h-1.5 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+            </div>
           </div>
         </div>
 
         <!-- Question Card -->
-        <div class="p-6 sm:p-8 rounded-3xl bg-card border-2 border-border shadow-xl space-y-6">
+        <div class="vintage-frame p-6 sm:p-8 rounded bg-card text-foreground font-serif shadow-lg space-y-6">
           <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-primary uppercase tracking-wider">${q.prompt}</span>
-              <button onclick="window.quizEngine.speakWord('${q.word}')" class="text-xs font-semibold text-primary flex items-center gap-1 hover:underline">
-                🔊 Listen Word
+            <div class="flex items-center justify-between pb-2 border-b border-border/60">
+              <span class="text-xs font-mono font-bold text-primary uppercase tracking-wider">
+                【 設問 】 ${q.prompt}
+              </span>
+              <button onclick="window.quizEngine.speakWord('${q.word}')" class="text-xs font-mono text-primary flex items-center gap-1 hover:underline">
+                🔊 音声
               </button>
             </div>
 
             ${q.sentence ? `
-              <div class="p-5 rounded-2xl bg-secondary/30 border border-border/50 font-serif text-lg text-foreground leading-relaxed">
+              <div class="p-4 sm:p-5 rounded border border-border bg-secondary/30 font-serif text-lg text-foreground leading-relaxed">
                 ${q.sentence}
               </div>
             ` : ''}
 
             ${q.confusable ? `
-              <div class="text-xs p-2.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                ⚠️ Hint: Be careful of easily confused counterparts for this word!
+              <div class="text-xs p-2.5 rounded border border-amber-600/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 font-sans">
+                ⚠️ 識別留意: 紛らわしい類似語にご注意ください
               </div>
             ` : ''}
           </div>
 
-          <!-- Multiple Choice Options -->
+          <!-- Multiple Choice Options (Kanji Slips: 甲, 乙, 丙, 丁) -->
           <div id="quiz-options-grid" class="grid grid-cols-1 gap-3">
             ${q.options.map((opt, idx) => {
-              const letter = String.fromCharCode(65 + idx);
+              const letter = kanjiLetters[idx] || String.fromCharCode(65 + idx);
               const encoded = encodeURIComponent(opt);
               return `
                 <button data-opt="${encoded}"
                         onclick="window.app.handleQuizOptionSelect(this, decodeURIComponent(this.dataset.opt))" 
-                        class="quiz-opt-btn w-full p-4 rounded-2xl border border-border bg-background hover:bg-muted/60 text-left font-medium text-foreground transition-all flex items-start gap-3">
-                  <span class="w-7 h-7 rounded-lg bg-muted text-muted-foreground flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
+                        class="quiz-opt-btn w-full p-4 rounded border border-border bg-card hover:bg-secondary/70 text-left font-serif text-foreground transition-all flex items-start gap-3">
+                  <span class="w-7 h-7 rounded border border-border bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 font-mono">
                     ${letter}
                   </span>
                   <span class="leading-relaxed text-sm sm:text-base">${opt}</span>
@@ -251,14 +271,14 @@ class Application {
             }).join('')}
           </div>
 
-          <!-- Explanation Box (Appears after selection) -->
-          <div id="quiz-explanation-box" class="hidden p-5 rounded-2xl border transition-all"></div>
+          <!-- Explanation Box -->
+          <div id="quiz-explanation-box" class="hidden p-5 rounded border transition-all font-serif"></div>
 
           <!-- Next Button -->
           <div id="quiz-next-bar" class="hidden flex justify-end pt-2">
             <button onclick="window.app.handleQuizNext()" 
-                    class="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary/90 flex items-center gap-2">
-              Next Question →
+                    class="px-6 py-2.5 rounded bg-primary text-primary-foreground font-serif font-bold shadow hover:bg-primary/90 flex items-center gap-2 text-sm">
+              次問へ進む (Next Question) →
             </button>
           </div>
         </div>
@@ -278,46 +298,50 @@ class Application {
     allButtons.forEach(b => {
       const bOpt = decodeURIComponent(b.dataset.opt || '');
       if (bOpt.trim().toLowerCase() === result.correctAnswer.trim().toLowerCase()) {
-        b.classList.remove('bg-background', 'border-border');
-        b.classList.add('bg-emerald-500/15', 'border-emerald-500', 'text-emerald-700', 'dark:text-emerald-300');
-        b.querySelector('span:first-child').classList.add('bg-emerald-500', 'text-white');
+        b.classList.remove('bg-card', 'border-border');
+        b.classList.add('bg-emerald-500/15', 'border-emerald-600', 'text-emerald-800', 'dark:text-emerald-200');
+        b.querySelector('span:first-child').classList.add('bg-emerald-700', 'text-white');
       } else if (b === buttonElement && !result.isCorrect) {
-        b.classList.remove('bg-background', 'border-border');
-        b.classList.add('bg-rose-500/15', 'border-rose-500', 'text-rose-700', 'dark:text-rose-300');
-        b.querySelector('span:first-child').classList.add('bg-rose-500', 'text-white');
+        b.classList.remove('bg-card', 'border-border');
+        b.classList.add('bg-rose-500/15', 'border-rose-600', 'text-rose-800', 'dark:text-rose-200');
+        b.querySelector('span:first-child').classList.add('bg-rose-700', 'text-white');
       }
     });
 
-    // Show Explanation Box
+    // Show Explanation Box with Hanko Stamp
     const expBox = document.getElementById('quiz-explanation-box');
     const nextBar = document.getElementById('quiz-next-bar');
     if (expBox) {
       expBox.classList.remove('hidden');
       if (result.isCorrect) {
-        expBox.className = 'p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-foreground space-y-2';
+        expBox.className = 'p-5 rounded bg-emerald-500/10 border-2 border-emerald-600/40 text-foreground space-y-2';
         expBox.innerHTML = `
-          <div class="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
-            <span>✓ Correct!</span>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20">Leitner Box ${result.box} (+1 Level)</span>
+          <div class="flex items-center gap-2">
+            <span class="hanko-stamp text-[10px]">合格・正解</span>
+            <span class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/20 font-bold text-emerald-800 dark:text-emerald-300">
+              Leitner Box ${result.box} (定着段階昇進)
+            </span>
           </div>
-          <p class="text-sm"><strong>${result.question.word}</strong>: ${result.question.definition}</p>
+          <p class="text-sm font-medium"><strong>${result.question.word}</strong>: ${result.question.definition}</p>
           ${result.question.originalSentence ? `
-            <div class="text-xs text-muted-foreground italic pt-1 border-t border-emerald-500/20">
+            <div class="text-xs text-muted-foreground italic pt-2 border-t border-emerald-500/20">
               "${result.question.originalSentence}"
             </div>
           ` : ''}
         `;
       } else {
-        expBox.className = 'p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-foreground space-y-2';
+        expBox.className = 'p-5 rounded bg-rose-500/10 border-2 border-rose-600/40 text-foreground space-y-2';
         expBox.innerHTML = `
-          <div class="flex items-center gap-2 font-bold text-rose-600 dark:text-rose-400">
-            <span>✕ Incorrect</span>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-rose-500/20">Moved to Box 1 (Scheduled for Review)</span>
+          <div class="flex items-center gap-2">
+            <span class="hanko-stamp text-[10px]">誤答・要復習</span>
+            <span class="text-xs font-mono px-2 py-0.5 rounded bg-rose-500/20 font-bold text-rose-800 dark:text-rose-300">
+              壱の箱 (Box 1) に再配置
+            </span>
           </div>
-          <p class="text-sm">Correct answer: <strong>${result.correctAnswer}</strong></p>
-          <p class="text-xs text-muted-foreground">Definition: ${result.question.definition}</p>
+          <p class="text-sm font-medium">正解: <strong>${result.correctAnswer}</strong></p>
+          <p class="text-xs text-muted-foreground">語義: ${result.question.definition}</p>
           ${result.question.originalSentence ? `
-            <div class="text-xs text-muted-foreground italic pt-1 border-t border-rose-500/20">
+            <div class="text-xs text-muted-foreground italic pt-2 border-t border-rose-500/20">
               "${result.question.originalSentence}"
             </div>
           ` : ''}
@@ -344,58 +368,62 @@ class Application {
 
     container.innerHTML = `
       <div class="max-w-2xl mx-auto space-y-6">
-        <div class="p-8 sm:p-10 rounded-3xl bg-card border-2 border-border shadow-2xl text-center space-y-6">
-          <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-4xl ${pass ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}">
-            ${pass ? '🏆' : '📚'}
+        <div class="catalog-card p-8 sm:p-10 rounded border-2 border-border shadow-xl text-center space-y-6 relative overflow-hidden font-serif">
+          
+          <div class="inline-flex p-3 rounded-full border-2 border-primary text-primary mb-2">
+            <span class="hanko-stamp text-sm">${pass ? '試験合格' : '修学継続'}</span>
           </div>
 
           <div>
-            <h2 class="text-3xl font-serif font-bold text-foreground mb-2">
-              ${pass ? 'Excellent Retention!' : 'Review Completed'}
+            <div class="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-1">
+              【 波間市・筆記試問結果調書 】 EXAMINATION RECORD
+            </div>
+            <h2 class="text-3xl font-serif font-black text-foreground mb-2">
+              ${pass ? '合格証書 (Proficiency Achieved)' : '試問終了・要反復演習'}
             </h2>
-            <p class="text-sm text-muted-foreground max-w-md mx-auto">
-              ${pass ? 'You have demonstrated strong recall. Words answered correctly have advanced to higher Leitner boxes for longer spaced intervals.' : 'Good practice! Words you missed have been flagged as Stumble Words and placed in Box 1 for rapid review.'}
+            <p class="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+              ${pass ? '正解した語彙はより長い記憶間隔（次段階の箱）へと昇進しました。' : '誤答した語彙は「要復習語彙」として壱の箱（24時間後）に記録され、再学習の優先度が高まりました。'}
             </p>
           </div>
 
           <!-- Overall Score Badge -->
-          <div class="inline-flex items-baseline gap-2 px-6 py-3 rounded-2xl bg-secondary/50 border border-border">
+          <div class="inline-flex items-baseline gap-2 px-6 py-3 rounded border-2 border-border bg-secondary/40 font-mono">
             <span class="text-4xl font-extrabold text-primary">${summary.accuracy}%</span>
-            <span class="text-sm text-muted-foreground">(${summary.score} / ${summary.total} correct)</span>
+            <span class="text-xs text-muted-foreground">(${summary.score} / ${summary.total} 正解)</span>
           </div>
 
           <!-- Cumulative Retention Breakdown Matrix -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-            <div class="p-4 rounded-2xl bg-muted/40 border border-border/50">
-              <div class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                Current Chapter Words
+            <div class="catalog-card p-4 rounded border border-border bg-card">
+              <div class="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                【 当則語彙 】 Current Law Words
               </div>
-              <div class="text-2xl font-bold text-foreground">
+              <div class="text-2xl font-bold font-mono text-foreground">
                 ${summary.currentCorrect} / ${summary.currentTotal}
               </div>
-              <div class="text-xs text-muted-foreground mt-1">Law ${summary.chapterNum || ''} vocabulary</div>
+              <div class="text-xs text-muted-foreground mt-1">Law ${summary.chapterNum || ''} 課題語彙の正解数</div>
             </div>
 
-            <div class="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20">
-              <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">
-                Cumulative Prior Words
+            <div class="catalog-card p-4 rounded border border-border bg-indigo-500/5">
+              <div class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 mb-1">
+                【 累計回帰 】 Prior Laws Retention
               </div>
-              <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                ${summary.cumulativeTotal > 0 ? `${summary.cumulativeCorrect} / ${summary.cumulativeTotal}` : 'N/A (Ch 1)'}
+              <div class="text-2xl font-bold font-mono text-indigo-700 dark:text-indigo-300">
+                ${summary.cumulativeTotal > 0 ? `${summary.cumulativeCorrect} / ${summary.cumulativeTotal}` : '該当なし (Law 1)'}
               </div>
-              <div class="text-xs text-muted-foreground mt-1">Retention of earlier chapters</div>
+              <div class="text-xs text-muted-foreground mt-1">過去章からの回帰出題の保持率</div>
             </div>
           </div>
 
           <!-- Missed words list if any -->
           ${summary.missedWords.length > 0 ? `
-            <div class="text-left p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20">
-              <div class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-2">
-                Words Needing Review (${summary.missedWords.length}):
+            <div class="text-left p-4 rounded border border-rose-600/30 bg-rose-500/5">
+              <div class="text-xs font-mono font-bold text-rose-700 dark:text-rose-300 mb-2">
+                【 要復習語彙リスト 】 (${summary.missedWords.length} 語):
               </div>
               <div class="flex flex-wrap gap-1.5">
                 ${summary.missedWords.map(w => `
-                  <button onclick="window.bookReader.showWordModal('${w}')" class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-300 font-semibold text-xs hover:bg-rose-500/20">
+                  <button onclick="window.bookReader.showWordModal('${w}')" class="px-2.5 py-1 rounded border border-rose-500/30 bg-card text-rose-800 dark:text-rose-300 font-bold text-xs hover:bg-rose-500/10">
                     ${w} 🔍
                   </button>
                 `).join('')}
@@ -407,19 +435,19 @@ class Application {
           <div class="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-border">
             ${summary.chapterNum && summary.chapterNum < 27 ? `
               <button onclick="window.app.openChapter(${summary.chapterNum + 1})" 
-                      class="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary/90 flex items-center gap-2">
-                Proceed to Law ${summary.chapterNum + 1} →
+                      class="px-6 py-2.5 rounded bg-primary text-primary-foreground font-serif font-bold shadow hover:bg-primary/90 flex items-center gap-2 text-sm">
+                次則 (Law ${summary.chapterNum + 1}) へ進む →
               </button>
             ` : ''}
 
             <button onclick="window.app.startChapterQuiz(${summary.chapterNum || 1})" 
-                    class="px-5 py-3 rounded-xl border border-border text-foreground hover:bg-muted font-medium">
-              Retake Quiz
+                    class="px-5 py-2.5 rounded border border-border bg-card text-foreground hover:bg-secondary font-serif font-medium text-xs">
+              再試験 (Retake)
             </button>
 
             <button onclick="window.app.showView('retention')" 
-                    class="px-5 py-3 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/80 font-medium">
-              View Retention Stats
+                    class="px-5 py-2.5 rounded border border-border bg-secondary text-secondary-foreground hover:opacity-80 font-serif font-medium text-xs">
+              記憶台帳を確認
             </button>
           </div>
         </div>
@@ -435,44 +463,54 @@ class Application {
     const intro = meta.intro;
 
     container.innerHTML = `
-      <div class="max-w-4xl mx-auto space-y-8">
-        <div class="p-8 sm:p-12 rounded-3xl bg-card border border-border shadow-xl space-y-6">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-            <span>An Original Vocabulary Book</span>
+      <div class="max-w-4xl mx-auto space-y-8 font-serif">
+        <div class="catalog-card p-8 sm:p-12 rounded border-2 border-border shadow-lg space-y-6">
+          <div class="flex items-center gap-2">
+            <span class="hanko-stamp text-xs">解題</span>
+            <span class="archive-badge">NAMAR MUNICIPAL LITERARY ARCHIVE</span>
           </div>
 
-          <h1 class="text-4xl sm:text-5xl font-serif font-black text-foreground">
+          <h1 class="text-4xl sm:text-5xl font-serif font-black text-foreground tracking-tight">
             ${meta.bookTitle}
           </h1>
-          <p class="text-lg text-muted-foreground font-serif italic">
-            ${meta.subtitle} • 333 vocabulary entries from Gradify
+          <p class="text-sm font-mono text-muted-foreground uppercase tracking-widest">
+            ${meta.subtitle} • GRADIFY 333 VOCABULARY CORPUS
           </p>
 
-          <div class="p-6 rounded-2xl bg-secondary/30 border border-border/50 text-foreground font-serif leading-relaxed space-y-4">
-            <h3 class="text-xl font-bold font-sans text-primary">Before you enter Namar</h3>
-            <p class="whitespace-pre-line">${intro.before_you_enter.text}</p>
+          <div class="vintage-frame p-6 rounded bg-card border border-border text-foreground font-serif leading-loose space-y-4">
+            <div class="flex items-center gap-2 pb-2 border-b border-dashed border-border/70">
+              <span class="hanko-circle text-xs">序</span>
+              <h3 class="text-lg font-serif font-bold text-primary">【 波間市への道程 】 Before you enter Namar</h3>
+            </div>
+            <p class="whitespace-pre-line text-sm sm:text-base">${intro.before_you_enter.text}</p>
           </div>
 
-          <div class="p-6 rounded-2xl bg-card border border-border text-foreground font-serif leading-relaxed space-y-4">
-            <h3 class="text-xl font-bold font-sans text-primary">How to make the words stay</h3>
-            <p class="whitespace-pre-line">${intro.how_to_make_stay.text}</p>
+          <div class="vintage-frame p-6 rounded bg-card border border-border text-foreground font-serif leading-loose space-y-4">
+            <div class="flex items-center gap-2 pb-2 border-b border-dashed border-border/70">
+              <span class="hanko-circle text-xs">訓</span>
+              <h3 class="text-lg font-serif font-bold text-primary">【 記憶定着の秘訣 】 How to make the words stay</h3>
+            </div>
+            <p class="whitespace-pre-line text-sm sm:text-base">${intro.how_to_make_stay.text}</p>
           </div>
 
           <div class="space-y-4">
-            <h3 class="text-xl font-bold text-foreground">The People You Will Meet</h3>
+            <div class="flex items-center gap-2 pb-1 border-b border-border/60">
+              <span class="hanko-stamp text-[10px]">人物録</span>
+              <h3 class="text-lg font-serif font-bold text-foreground">波間市・主要登場人物略歴</h3>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               ${intro.characters.map(c => `
-                <div class="p-4 rounded-xl border border-border bg-background">
+                <div class="catalog-card p-4 rounded border border-border bg-card">
                   <div class="font-serif font-bold text-foreground text-base">${c.name}</div>
-                  <div class="text-xs text-muted-foreground mt-1">${c.role}</div>
+                  <div class="text-xs text-muted-foreground font-serif mt-1">${c.role}</div>
                 </div>
               `).join('')}
             </div>
           </div>
 
           <div class="pt-6 border-t border-border flex justify-center">
-            <button onclick="window.app.openChapter(1)" class="px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-xl hover:bg-primary/90 transition-all flex items-center gap-3">
-              <span>Enter Namar: Begin Law 1</span>
+            <button onclick="window.app.openChapter(1)" class="px-8 py-3.5 rounded bg-primary text-primary-foreground font-serif font-bold text-base shadow hover:bg-primary/90 transition-all flex items-center gap-3">
+              <span>第一則へ入館：読本を開始</span>
               <span>→</span>
             </button>
           </div>

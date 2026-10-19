@@ -69,54 +69,73 @@ class BookReader {
     const container = document.getElementById('book-article');
     if (!container) return;
 
-    // Highlight target words in each section
-    const highlightedSections = {};
+    const kanjiNums = ["〇", "壱", "弐", "参", "四", "五", "六", "七", "八", "九", "十", 
+                       "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+                       "二十一", "二十二", "二十三", "二十四", "二十五", "二十六", "二十七"];
+
     const sectionKeys = [
-      { id: 'scene', label: '1. The scene' },
-      { id: 'price', label: '2. The price' },
-      { id: 'countermove', label: '3. The countermove' },
-      { id: 'beyond', label: '4. Beyond the city' },
-      { id: 'practice', label: '5. The law in practice' }
+      { id: 'scene', label: '1. The scene', kanji: '一・発端' },
+      { id: 'price', label: '2. The price', kanji: '二・代償' },
+      { id: 'countermove', label: '3. The countermove', kanji: '三・妙手' },
+      { id: 'beyond', label: '4. Beyond the city', kanji: '四・応用' },
+      { id: 'practice', label: '5. The law in practice', kanji: '五・実践' }
     ];
 
     const wordsList = chapter.words;
 
     // Retention health score for this chapter
     const retentionScore = window.srsEngine.getLawRetentionScore(chapterNum, wordsList);
-    const retentionBadgeClass = retentionScore >= 80 ? 'bg-emerald-500' : retentionScore >= 50 ? 'bg-amber-500' : 'bg-rose-500';
+    const retentionBadgeClass = retentionScore >= 80 ? 'border-emerald-700 text-emerald-800 dark:text-emerald-300' : retentionScore >= 50 ? 'border-amber-700 text-amber-800 dark:text-amber-300' : 'border-rose-700 text-rose-800 dark:text-rose-300';
 
     let html = `
-      <div class="chapter-header mb-8 pb-6 border-b border-border/40">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <span class="text-xs font-bold tracking-widest uppercase text-accent-foreground/70 bg-accent/20 px-3 py-1 rounded-full">
-            Law ${chapter.law} of 27
-          </span>
+      <div class="chapter-header mb-10 pb-8 border-b-2 border-border/80 relative">
+        <!-- Vintage Archive Registration Header Strip -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-3 border-b border-dashed border-border/60 text-xs">
           <div class="flex items-center gap-2">
-            <span class="text-xs font-medium text-muted-foreground">Retention Health:</span>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-white ${retentionBadgeClass}">
-              ${retentionScore}%
+            <span class="archive-badge">ARCHIVE FILE № ${String(chapter.law).padStart(2, '0')}</span>
+            <span class="hanko-stamp text-[10px]">波間記録</span>
+            <span class="text-[11px] font-mono text-muted-foreground hidden sm:inline">NAMAR MUNICIPAL RECORD • VOL. XXVII</span>
+          </div>
+          <div class="flex items-center gap-2 font-mono text-xs">
+            <span class="text-muted-foreground">RETENTION:</span>
+            <span class="px-2 py-0.5 border rounded ${retentionBadgeClass} font-bold text-[11px]">
+              ${retentionScore}% 定着
             </span>
           </div>
         </div>
 
-        <h1 class="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-4 leading-tight">
-          ${chapter.title}
-        </h1>
-
-        <div class="vocab-chips-bar mt-4 pt-4 border-t border-dashed border-border/40">
-          <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            Target Headwords (${wordsList.length} entries — click any to inspect):
+        <!-- Law Title with Japanese Literary Nuance -->
+        <div class="text-center sm:text-left mb-6">
+          <div class="text-xs font-bold tracking-[0.25em] text-primary uppercase font-mono mb-2">
+            【 第${kanjiNums[chapter.law] || chapter.law}則 】 LAW ${chapter.law} OF 27
           </div>
-          <div class="flex flex-wrap gap-1.5">
+          <h1 class="text-3xl sm:text-5xl font-serif font-black text-foreground leading-tight tracking-tight mb-3">
+            ${chapter.title}
+          </h1>
+          <p class="text-xs text-muted-foreground font-mono italic">
+            Documented by Mira • Preserved in Soren's Archives • Namar Waterfront District
+          </p>
+        </div>
+
+        <!-- Target Words Catalog Slip -->
+        <div class="catalog-card p-4 sm:p-5 border border-border bg-card/60 mt-6">
+          <div class="flex items-center justify-between mb-2 pb-2 border-b border-border/40 text-xs">
+            <div class="font-bold tracking-wider text-muted-foreground flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-primary"></span>
+              【 本則・指定語彙 】 TARGET HEADWORDS (${wordsList.length})
+            </div>
+            <span class="text-[10px] font-mono text-muted-foreground">Click word to inspect call slip</span>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-1">
             ${wordsList.map(w => {
               const rec = window.srsEngine.getWordRecord(w, chapter.law);
-              const boxLabel = rec.box === 5 ? 'Mastered' : `Box ${rec.box}`;
-              const boxBadge = rec.box === 5 ? 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400' : 'text-primary bg-primary/10 border-primary/20';
+              const boxKanji = { 1: '壱', 2: '弐', 3: '参', 4: '四', 5: '皆伝' }[rec.box] || '壱';
+              const boxClass = rec.box === 5 ? 'border-emerald-600/60 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 font-bold' : 'border-border text-foreground';
               return `
-                <button class="word-chip px-2.5 py-1 text-xs rounded-md border font-medium transition-all hover:scale-105 ${boxBadge}" 
+                <button class="word-chip text-xs transition-all hover:scale-105 ${boxClass}" 
                         onclick="window.bookReader.showWordModal('${w}')">
                   ${w}
-                  <span class="ml-1 opacity-70 text-[10px]">(${boxLabel})</span>
+                  <span class="ml-1 text-[10px] opacity-75 font-mono">(${boxKanji})</span>
                 </button>
               `;
             }).join('')}
@@ -130,52 +149,54 @@ class BookReader {
       const text = chapter.sections[sec.id] || '';
       const highlightedText = this.highlightWords(text, wordsList);
       html += `
-        <section class="book-section mb-10">
-          <h2 class="text-lg font-serif font-bold text-accent-foreground mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-accent"></span>
-            ${sec.label}
-          </h2>
-          <div class="section-content text-foreground/90 leading-relaxed space-y-4">
+        <section class="book-section mb-12">
+          <div class="section-heading">
+            <span class="text-xs font-bold font-mono px-2 py-0.5 bg-secondary text-secondary-foreground border border-border/70 rounded">
+              ${sec.kanji}
+            </span>
+            <h2 class="text-xl font-serif font-bold text-foreground">
+              ${sec.label}
+            </h2>
+          </div>
+          <div class="section-content text-foreground/90 leading-loose space-y-4">
             <p>${highlightedText}</p>
           </div>
         </section>
       `;
     });
 
-    // End of chapter action box
+    // End of chapter action box (Vintage Library Check-out Stamp)
     html += `
-      <div class="end-chapter-box mt-12 p-6 sm:p-8 rounded-2xl bg-card border border-border/60 shadow-lg text-center">
-        <div class="inline-flex p-3 rounded-2xl bg-primary/10 text-primary mb-3">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
+      <div class="catalog-card mt-14 p-6 sm:p-10 border-2 border-border/80 text-center relative overflow-hidden">
+        <div class="absolute top-3 right-3 opacity-20 dark:opacity-10 pointer-events-none">
+          <div class="hanko-circle text-2xl w-20 h-20">検印</div>
+        </div>
+
+        <div class="inline-flex p-3 rounded-full border-2 border-primary text-primary mb-3">
+          <span class="hanko-stamp text-sm">読了印</span>
         </div>
         <h3 class="text-2xl font-serif font-bold text-foreground mb-2">
-          Finished Reading Law ${chapter.law}?
+          Finished Law ${chapter.law}: Ready for Inquiry?
         </h3>
-        <p class="text-muted-foreground text-sm max-w-lg mx-auto mb-6">
-          Test your retention right now! ${chapter.law > 1 ? `This quiz includes Law ${chapter.law} words <strong>plus cumulative review from earlier laws</strong> so you never forget what you've learned.` : `This quiz tests all 12 target words from Law 1 to lock in your foundation.`}
+        <p class="text-muted-foreground text-sm max-w-lg mx-auto mb-6 leading-relaxed">
+          ${chapter.law > 1 ? `Test your comprehension now. This examination includes Law ${chapter.law} headwords <strong>plus cumulative spiral review from earlier laws</strong> to ensure permanent retention.` : `Lock in the foundational 12 headwords of Law 1 before entering the higher administrative courts.`}
         </p>
 
         <div class="flex flex-wrap items-center justify-center gap-3">
           <button onclick="window.app.startChapterQuiz(${chapter.law})" 
-                  class="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary/90 transition-all flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            Take Law ${chapter.law} Mastery Test
+                  class="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-serif font-bold shadow hover:bg-primary/90 transition-all flex items-center gap-2">
+            <span>⚡ 筆記試験 (Take Law ${chapter.law} Test)</span>
           </button>
           
           <button onclick="window.app.startFlashcardsForChapter(${chapter.law})"
-                  class="px-5 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-all">
-            Review Flashcards
+                  class="px-5 py-3 rounded-lg border border-border bg-card text-foreground font-serif font-medium hover:bg-secondary transition-all">
+            🗂️ 単語札 (Flashcards)
           </button>
 
           ${chapter.law < 27 ? `
             <button onclick="window.bookReader.loadChapter(${chapter.law + 1})"
-                    class="px-5 py-3 rounded-xl border border-border text-foreground hover:bg-muted font-medium transition-all">
-              Next Law →
+                    class="px-5 py-3 rounded-lg border border-border bg-secondary text-secondary-foreground hover:opacity-80 font-serif font-medium transition-all">
+              次則 (Next Law ${chapter.law + 1}) →
             </button>
           ` : ''}
         </div>
@@ -227,37 +248,40 @@ class BookReader {
     const popover = document.getElementById('word-popover');
     if (!popover) return;
 
-    const boxNames = { 1: 'Box 1: Fragile', 2: 'Box 2: Learning', 3: 'Box 3: Retained', 4: 'Box 4: Solid', 5: 'Box 5: Mastered' };
+    const boxKanji = { 1: '壱の箱 (初見 24h)', 2: '弐の箱 (修学 3d)', 3: '参の箱 (定着 7d)', 4: '四の箱 (熟達 14d)', 5: '皆伝 (Mastered 30d)' };
 
     popover.innerHTML = `
-      <div class="p-4 max-w-sm rounded-xl bg-popover text-popover-foreground border border-border shadow-2xl relative">
-        <button onclick="document.getElementById('word-popover').classList.add('hidden')" class="absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1 text-sm">✕</button>
-        <div class="flex items-center justify-between gap-2 mb-2">
+      <div class="catalog-card p-5 max-w-sm rounded border-2 border-border shadow-2xl relative bg-card text-foreground font-serif">
+        <button onclick="document.getElementById('word-popover').classList.add('hidden')" class="absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1 text-xs font-mono">✕</button>
+        
+        <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-dashed border-border/60">
           <div class="flex items-center gap-2">
-            <h4 class="text-xl font-bold font-serif capitalize text-primary">${entry.word}</h4>
-            <button onclick="window.quizEngine.speakWord('${entry.word}')" class="p-1 rounded-full text-primary hover:bg-primary/10 transition-colors" title="Listen Pronunciation">
+            <span class="hanko-stamp text-[10px]">語義札</span>
+            <h4 class="text-xl font-serif font-black text-primary capitalize">${entry.word}</h4>
+            <button onclick="window.quizEngine.speakWord('${entry.word}')" class="p-1 rounded text-primary hover:bg-primary/10 transition-colors" title="Listen Pronunciation">
               🔊
             </button>
           </div>
-          <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${rec.box === 5 ? 'bg-emerald-500/20 text-emerald-600' : 'bg-primary/10 text-primary'}">
-            ${boxNames[rec.box] || 'Box 1'}
+          <span class="text-[10px] font-mono px-2 py-0.5 border border-border/80 rounded bg-secondary text-secondary-foreground font-bold">
+            ${boxKanji[rec.box] || '壱の箱'}
           </span>
         </div>
 
-        <p class="text-sm font-medium text-foreground/90 mb-3 leading-snug">
+        <div class="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-1">【 意味・定義 】</div>
+        <p class="text-sm font-medium text-foreground mb-3 leading-relaxed">
           ${entry.definition}
         </p>
 
         ${entry.confusable ? `
-          <div class="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs mb-3">
-            ⚠️ ${entry.confusable}
+          <div class="p-2.5 rounded border border-amber-600/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 text-xs mb-3 font-sans">
+            <span class="font-bold">⚠️ 混同注意:</span> ${entry.confusable}
           </div>
         ` : ''}
 
-        <div class="flex items-center justify-between gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50">
-          <span>Law ${entry.law} Vocabulary</span>
-          <button onclick="window.bookReader.toggleWordMastery('${entry.word}')" class="text-primary hover:underline font-semibold">
-            ${rec.box === 5 ? 'Reset to Learning' : 'Mark as Mastered ✓'}
+        <div class="flex items-center justify-between gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50 font-mono">
+          <span>Law ${entry.law} 語彙</span>
+          <button onclick="window.bookReader.toggleWordMastery('${entry.word}')" class="text-primary hover:underline font-bold">
+            ${rec.box === 5 ? '【 復習に戻す 】' : '【 皆伝印を押す ✓ 】'}
           </button>
         </div>
       </div>
@@ -271,11 +295,11 @@ class BookReader {
     // Check bounds
     let top = rect.bottom + 8;
     let left = rect.left;
-    if (left + 320 > window.innerWidth) {
-      left = window.innerWidth - 330;
+    if (left + 330 > window.innerWidth) {
+      left = window.innerWidth - 340;
     }
-    if (top + 200 > window.innerHeight) {
-      top = rect.top - 180;
+    if (top + 220 > window.innerHeight) {
+      top = rect.top - 200;
     }
 
     popover.style.top = `${Math.max(10, top)}px`;
@@ -293,54 +317,67 @@ class BookReader {
     const rec = window.srsEngine.getWordRecord(word, entry.law);
     const modalContent = document.getElementById('global-word-modal-content');
 
+    const boxKanji = { 1: '壱の箱 (初見)', 2: '弐の箱 (修学)', 3: '参の箱 (定着)', 4: '四の箱 (熟達)', 5: '五の箱 (皆伝)' };
+
     modalContent.innerHTML = `
-      <div class="flex items-start justify-between mb-4">
-        <div>
-          <div class="flex items-center gap-3">
-            <h3 class="text-3xl font-serif font-bold text-foreground capitalize">${entry.word}</h3>
-            <button onclick="window.quizEngine.speakWord('${entry.word}')" class="p-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 text-lg">
-              🔊 Speak
-            </button>
-          </div>
-          <div class="text-sm text-muted-foreground mt-1">Law ${entry.law} Target Vocabulary</div>
-        </div>
-        <button onclick="document.getElementById('global-word-modal').classList.add('hidden')" class="p-2 text-muted-foreground hover:text-foreground text-xl">✕</button>
-      </div>
-
-      <div class="p-4 rounded-xl bg-card border border-border/60 mb-4">
-        <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Definition:</div>
-        <p class="text-base text-foreground font-medium">${entry.definition}</p>
-      </div>
-
-      ${entry.confusable ? `
-        <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 text-sm mb-4">
-          <span class="font-bold">⚠️ Critical Distinction:</span> ${entry.confusable}
-        </div>
-      ` : ''}
-
-      <div class="mb-4">
-        <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Encounters in The Price of Influence:</div>
-        <div class="space-y-2">
-          ${entry.examples.map(ex => `
-            <div class="p-3 rounded-lg bg-muted/50 text-sm text-foreground/90 italic border-l-2 border-primary">
-              "${ex}"
+      <div class="vintage-frame p-6 sm:p-8 rounded bg-card text-foreground font-serif">
+        <div class="flex items-start justify-between pb-4 mb-4 border-b-2 border-border/70">
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="hanko-circle text-xs">語</span>
+              <h3 class="text-3xl sm:text-4xl font-serif font-black text-foreground capitalize">${entry.word}</h3>
+              <button onclick="window.quizEngine.speakWord('${entry.word}')" class="px-2.5 py-1 rounded border border-primary text-primary hover:bg-primary/10 text-xs font-mono">
+                🔊 発音
+              </button>
             </div>
-          `).join('')}
+            <div class="text-xs font-mono text-muted-foreground mt-1 tracking-wider">
+              NAMAR VOCABULARY ARCHIVE • LAW ${entry.law} HEADWORD
+            </div>
+          </div>
+          <button onclick="document.getElementById('global-word-modal').classList.add('hidden')" class="p-1 text-muted-foreground hover:text-foreground text-sm font-mono">✕ 閉じる</button>
         </div>
-      </div>
 
-      <div class="pt-4 border-t border-border flex items-center justify-between">
-        <div class="text-xs text-muted-foreground">
-          SRS Status: <strong>Box ${rec.box}</strong> (${rec.correctCount} correct / ${rec.incorrectCount} mistakes)
+        <div class="catalog-card p-4 border border-border bg-secondary/20 mb-4">
+          <div class="text-xs font-bold font-mono text-primary uppercase tracking-widest mb-1">【 語義・本質 】 DEFINITION</div>
+          <p class="text-base sm:text-lg text-foreground font-medium leading-relaxed">${entry.definition}</p>
         </div>
-        <button onclick="window.bookReader.toggleWordMastery('${entry.word}'); document.getElementById('global-word-modal').classList.add('hidden');" class="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90">
-          ${rec.box === 5 ? 'Demote to Box 1' : 'Mark as Mastered (Box 5)'}
-        </button>
+
+        ${entry.confusable ? `
+          <div class="p-3 rounded border border-amber-600/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 text-xs sm:text-sm mb-4 font-sans">
+            <span class="font-bold">⚠️ 識別要領 (Critical Distinction):</span> ${entry.confusable}
+          </div>
+        ` : ''}
+
+        <div class="mb-4">
+          <div class="text-xs font-bold font-mono text-muted-foreground uppercase tracking-widest mb-2">
+            【 本文中での実例 】 5 CONTEXTUAL ENCOUNTERS IN NAMAR:
+          </div>
+          <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+            ${entry.examples.map((ex, i) => `
+              <div class="p-3 rounded border border-border/60 bg-muted/30 text-xs sm:text-sm text-foreground/90 italic leading-relaxed border-l-4 border-l-primary">
+                <span class="font-mono not-italic text-[10px] text-muted-foreground block mb-1">実例 0${i+1}:</span>
+                "${ex}"
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-dashed border-border flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+          <div class="text-muted-foreground">
+            記憶段階: <strong class="text-foreground">${boxKanji[rec.box] || '壱の箱'}</strong> (${rec.correctCount} 正解 / ${rec.incorrectCount} 誤答)
+          </div>
+          <button onclick="window.bookReader.toggleWordMastery('${entry.word}'); document.getElementById('global-word-modal').classList.add('hidden');" 
+                  class="px-4 py-2 rounded bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-all">
+            ${rec.box === 5 ? '初見段階に戻す' : '皆伝 (Mastered) に認定印を押す'}
+          </button>
+        </div>
       </div>
     `;
 
     modal.classList.remove('hidden');
   }
+
+
 
   toggleWordMastery(word) {
     const rec = window.srsEngine.getWordRecord(word);

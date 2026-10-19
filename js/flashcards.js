@@ -152,92 +152,97 @@ class FlashcardTrainer {
           </div>
         </div>
 
-        <!-- 3D Flip Card Container -->
+        <!-- 3D Flip Card Container (Japanese Karuta Style) -->
         <div class="flashcard-container cursor-pointer select-none" onclick="window.flashcardTrainer.flipCard()">
           <div id="flashcard-inner" class="flashcard-inner ${this.isFlipped ? 'flipped' : ''}">
             
-            <!-- Card Front -->
-            <div class="flashcard-front p-8 sm:p-12 rounded-3xl bg-card border-2 border-border shadow-xl flex flex-col justify-between items-center text-center">
-              <div class="w-full flex items-center justify-between text-xs text-muted-foreground">
-                <span class="px-2.5 py-1 rounded-full bg-muted font-semibold">Law ${card.law}</span>
-                <span class="px-2.5 py-1 rounded-full ${rec.box === 5 ? 'bg-emerald-500/20 text-emerald-600' : 'bg-primary/10 text-primary'} font-semibold">
-                  ${boxNames[rec.box] || 'Box 1'}
+            <!-- Card Front (Karuta Face) -->
+            <div class="flashcard-front p-8 sm:p-12 rounded bg-card border-2 border-border shadow-md flex flex-col justify-between items-center text-center relative">
+              <div class="w-full flex items-center justify-between text-xs">
+                <span class="archive-badge">札番号 № ${String(this.currentIndex + 1).padStart(3, '0')}</span>
+                <span class="hanko-stamp text-[10px]">単語札</span>
+                <span class="font-mono text-muted-foreground text-xs font-bold">
+                  Law ${card.law} • ${boxNames[rec.box] || 'Box 1'}
                 </span>
               </div>
 
               <div class="my-auto py-8">
-                <h3 class="text-4xl sm:text-5xl font-serif font-extrabold text-foreground capitalize tracking-tight mb-4">
+                <div class="text-[11px] font-mono text-muted-foreground uppercase tracking-widest mb-2">【 標題語 】 HEADWORD</div>
+                <h3 class="text-4xl sm:text-6xl font-serif font-black text-foreground capitalize tracking-tight mb-4">
                   ${card.word}
                 </h3>
                 <button onclick="event.stopPropagation(); window.quizEngine.speakWord('${card.word}')" 
-                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all text-xs font-semibold">
-                  🔊 Listen Pronunciation
+                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-primary text-primary hover:bg-primary/10 transition-all text-xs font-mono font-bold">
+                  🔊 音声発音 (Listen)
                 </button>
               </div>
 
-              <div class="text-xs text-muted-foreground flex items-center gap-1.5 opacity-70">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
-                Click or press Space to reveal meaning
+              <div class="text-xs text-muted-foreground font-serif opacity-75">
+                ( 札をクリック、または空白キーで裏面の語義を確認 )
               </div>
             </div>
 
-            <!-- Card Back -->
-            <div class="flashcard-back p-8 sm:p-12 rounded-3xl bg-card border-2 border-primary/40 shadow-2xl flex flex-col justify-between items-center text-center">
-              <div class="w-full flex items-center justify-between text-xs text-muted-foreground">
-                <span class="font-serif font-bold text-foreground text-base capitalize">${card.word}</span>
-                <span class="text-primary font-medium">Definition & Context</span>
+            <!-- Card Back (Karuta Definition & Context) -->
+            <div class="flashcard-back p-8 sm:p-12 rounded bg-card border-2 border-primary/50 shadow-xl flex flex-col justify-between items-center text-center">
+              <div class="w-full flex items-center justify-between text-xs pb-2 border-b border-dashed border-border/70">
+                <div class="flex items-center gap-1.5">
+                  <span class="hanko-circle text-xs">解</span>
+                  <span class="font-serif font-bold text-foreground text-base capitalize">${card.word}</span>
+                </div>
+                <span class="text-primary font-mono text-xs">【 語義と文脈 】</span>
               </div>
 
               <div class="my-auto py-4 space-y-4 max-w-lg">
-                <div class="p-4 rounded-2xl bg-secondary/30 border border-border/50 text-foreground font-serif text-lg leading-relaxed font-medium">
+                <div class="p-4 rounded border border-border bg-secondary/30 text-foreground font-serif text-lg leading-relaxed font-medium">
                   "${card.definition}"
                 </div>
 
                 ${example ? `
-                  <div class="p-3 rounded-xl bg-muted/40 text-xs text-muted-foreground italic border-l-2 border-primary text-left">
-                    Context: "${example}"
+                  <div class="p-3 rounded border-l-4 border-l-primary bg-muted/40 text-xs text-muted-foreground italic text-left leading-relaxed">
+                    <span class="font-mono not-italic text-[10px] block text-primary font-bold mb-1">【 物語での文脈例 】:</span>
+                    "${example}"
                   </div>
                 ` : ''}
 
                 ${card.confusable ? `
-                  <div class="p-2.5 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs text-left">
-                    ⚠️ ${card.confusable}
+                  <div class="p-2.5 rounded border border-amber-600/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 text-xs text-left font-sans">
+                    ⚠️ 混同注意: ${card.confusable}
                   </div>
                 ` : ''}
               </div>
 
-              <div class="text-[11px] text-muted-foreground">
-                Rate your recall below to adjust the spaced repetition interval
+              <div class="text-[11px] font-mono text-muted-foreground">
+                下の刻印ボタンで想起の難易度を格付けし、記憶定着度を更新
               </div>
             </div>
 
           </div>
         </div>
 
-        <!-- Rating Buttons (Active when flipped) -->
-        <div class="flex items-center justify-center gap-2 sm:gap-3 pt-2">
+        <!-- Rating Woodblock Buttons (Active when flipped) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
           <button onclick="window.flashcardTrainer.rateCard('again')"
-                  class="flex-1 py-3 px-2 sm:px-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs sm:text-sm hover:bg-rose-500/20 transition-all">
-            <span class="block text-[10px] opacity-75 font-normal">Forgot (Reset)</span>
-            Again (1)
+                  class="py-3 px-2 rounded border-2 border-rose-600/40 bg-rose-500/10 text-rose-700 dark:text-rose-300 font-serif font-bold text-xs hover:bg-rose-500/20 transition-all text-center">
+            <span class="block text-[10px] font-mono opacity-80">再学習 (Box 1)</span>
+            【 壱・再考 】 Again (1)
           </button>
           
           <button onclick="window.flashcardTrainer.rateCard('hard')"
-                  class="flex-1 py-3 px-2 sm:px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs sm:text-sm hover:bg-amber-500/20 transition-all">
-            <span class="block text-[10px] opacity-75 font-normal">Difficult</span>
-            Hard (2)
+                  class="py-3 px-2 rounded border-2 border-amber-600/40 bg-amber-500/10 text-amber-800 dark:text-amber-300 font-serif font-bold text-xs hover:bg-amber-500/20 transition-all text-center">
+            <span class="block text-[10px] font-mono opacity-80">難渋 (Keep)</span>
+            【 弐・難渋 】 Hard (2)
           </button>
 
           <button onclick="window.flashcardTrainer.rateCard('good')"
-                  class="flex-1 py-3 px-2 sm:px-4 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs sm:text-sm hover:bg-blue-500/20 transition-all">
-            <span class="block text-[10px] opacity-75 font-normal">+1 Box</span>
-            Good (3)
+                  class="py-3 px-2 rounded border-2 border-blue-600/40 bg-blue-500/10 text-blue-800 dark:text-blue-300 font-serif font-bold text-xs hover:bg-blue-500/20 transition-all text-center">
+            <span class="block text-[10px] font-mono opacity-80">合格 (+1 Box)</span>
+            【 参・合格 】 Good (3)
           </button>
 
           <button onclick="window.flashcardTrainer.rateCard('easy')"
-                  class="flex-1 py-3 px-2 sm:px-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs sm:text-sm hover:bg-emerald-500/20 transition-all">
-            <span class="block text-[10px] opacity-75 font-normal">+2 Boxes</span>
-            Easy (4)
+                  class="py-3 px-2 rounded border-2 border-emerald-600/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-serif font-bold text-xs hover:bg-emerald-500/20 transition-all text-center">
+            <span class="block text-[10px] font-mono opacity-80">皆伝 (+2 Boxes)</span>
+            【 四・極上 】 Easy (4)
           </button>
         </div>
       </div>
